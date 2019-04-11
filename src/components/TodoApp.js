@@ -6,17 +6,27 @@ import { TodoItem } from "./TodoItem";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoListActions } from "./TodoListActions";
 
+import { addTodo, getTodos } from "../api";
+
 export class TodoApp extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      taskList: [
-        { description: "Dar de comer ao gato", isComplete: false },
-        { description: "Estudar TI2", isComplete: true }
-      ],
+      taskList: [],
       filter: "all"
     };
+  }
+
+  //"Onload" - ler dados em Ajax
+  componentDidMount() {
+    getTodos()
+      .then((todos) => {
+        this.setState({ taskList: todos });
+      })
+      .catch((erro) => {
+        console.error("Erro ao obter as tarefas", erro);
+      });
   }
 
   render() {
@@ -84,14 +94,15 @@ export class TodoApp extends React.Component {
     this.setState({ taskList: aux });
   }
 
-  handleNewTodo(newTodoText) {
-    let copia = this.state.taskList.slice();
-
-    copia.push({ description: newTodoText, isComplete: false });
-
-    this.setState({
-      taskList: copia
-    });
+  async handleNewTodo(newTodoText) {
+    try {
+      let novaTarefa = await addTodo(newTodoText);
+      this.setState({
+        taskList: [...this.state.taskList, novaTarefa]
+      });
+    } catch (e) {
+      console.error("Erro ao inserir", e);
+    }
   }
 
   handleDeleteTodo(index) {
